@@ -277,6 +277,55 @@
     color:var(--gold);
   }
   .pay-body{ padding:6px 16px 14px; }
+
+  /* Payment method blocks */
+  .pay-method{
+    margin-top:12px;
+    padding:12px 0 4px;
+    border-bottom:1px dashed rgba(255,255,255,.07);
+  }
+  .pay-method:last-child{ border-bottom:none; }
+  .pay-method-title{
+    display:flex; align-items:center; gap:8px;
+    font-size:13px; font-weight:700;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  .pay-method-title .icon{ font-size:15px; }
+  .pay-method-steps{
+    list-style:none; margin:0; padding:0;
+    display:flex; flex-direction:column; gap:6px;
+    font-size:13px; color:var(--muted);
+  }
+  .pay-method-steps li{
+    display:flex; align-items:flex-start; gap:8px;
+    line-height:1.45;
+  }
+  .pay-method-steps li::before{
+    content:"•";
+    color:var(--gold);
+    font-weight:800;
+    flex-shrink:0;
+    width:14px;
+    text-align:center;
+  }
+  .pay-method-steps li b{ color:#fff; font-weight:650; }
+  .pay-method-number{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    padding:8px 10px;
+    background:rgba(255,255,255,.035);
+    border-radius:10px;
+    border:1px solid var(--line);
+    margin:6px 0 2px;
+    font-size:13.5px;
+    font-weight:700;
+    color:#fff;
+  }
+  .pay-method-number .copy{
+    margin-left:auto;
+  }
+
   .pay-row{
     display:flex; align-items:center; justify-content:space-between;
     gap:12px;
@@ -307,6 +356,7 @@
   }
   .copy:hover{ color:var(--gold); border-color:var(--gold); background:var(--gold-soft); }
   .copy:active{ transform:scale(.93); }
+
   .pay-total{
     margin-top:12px;
     padding:12px 14px;
@@ -388,7 +438,7 @@
     outline:none;
     transition:.2s;
   }
-  .input-row input::placeholder{ color:#5f7governance; color:#5f7288; }
+  .input-row input::placeholder{ color:#5f7288; }
   .input-row input:focus{
     border-color:var(--gold);
     background:rgba(245,179,1,.06);
@@ -509,11 +559,41 @@ const CONFIG = {
     }
   },
 
-  payTo: {
-    mtn    : "+256 700 000 000",
-    airtel : "+256 750 000 000",
-    name   : "Elite Company Group"
-  }
+  /* ---- PAYMENT METHODS ---- */
+  paymentMethods: [
+    {
+      id: 'mtn_to_mpesa',
+      title: 'UGANDA MTN → M-PESA KENYA',
+      icon: '📱',
+      steps: [
+        'Dial *165#',
+        'Send money',
+        'Africa countries',
+        'East Africa',
+        'Kenya',
+        'Safaricom mpesa',
+        'Number: 254702375172',
+        'Amount',
+        'Pin and send'
+      ],
+      name: 'BRIAN KIMUTAI',
+      copyNumber: '254702375172'
+    },
+    {
+      id: 'mtn_uganda',
+      title: 'MTN MoMo (Uganda)',
+      icon: '📲',
+      number: '+256 700 000 000',
+      name: 'Elite Company Group'
+    },
+    {
+      id: 'airtel_uganda',
+      title: 'Airtel Money (Uganda)',
+      icon: '📞',
+      number: '+256 750 000 000',
+      name: 'Elite Company Group'
+    }
+  ]
 };
 
 /* ================================================================
@@ -735,27 +815,50 @@ function showPaymentCard(p){
 
   const node = document.createElement("div");
   node.className = "bubble pay-bubble";
+
+  /* ---- build payment methods HTML ---- */
+  let methodsHTML = '';
+  CONFIG.paymentMethods.forEach(m => {
+    methodsHTML += `<div class="pay-method">`;
+    methodsHTML += `<div class="pay-method-title"><span class="icon">${m.icon}</span> ${esc(m.title)}</div>`;
+
+    if (m.steps) {
+      // steps list
+      methodsHTML += `<ul class="pay-method-steps">`;
+      m.steps.forEach(s => {
+        methodsHTML += `<li>${esc(s)}</li>`;
+      });
+      methodsHTML += `</ul>`;
+      if (m.name) {
+        methodsHTML += `<div style="margin-top:8px;font-size:13px;color:var(--muted);">NAME: <b style="color:#fff;">${esc(m.name)}</b></div>`;
+      }
+      if (m.copyNumber) {
+        methodsHTML += `<div class="pay-method-number">
+          <span>${esc(m.copyNumber)}</span>
+          <button class="copy" data-copy="${esc(m.copyNumber)}">COPY</button>
+        </div>`;
+      }
+    } else {
+      // simple number method
+      methodsHTML += `<div class="pay-method-number">
+        <span>${esc(m.number)}</span>
+        <button class="copy" data-copy="${esc(m.number)}">COPY</button>
+      </div>`;
+      if (m.name) {
+        methodsHTML += `<div style="margin-top:4px;font-size:13px;color:var(--muted);">NAME: <b style="color:#fff;">${esc(m.name)}</b></div>`;
+      }
+    }
+    methodsHTML += `</div>`;
+  });
+
   node.innerHTML = `
     <div class="pay-head">
       <span>💳 MEMBERSHIP PAYMENT</span>
       <span>REF ${state.ref}</span>
     </div>
     <div class="pay-body">
-      <div class="pay-row">
-        <span class="k">MTN MoMo</span>
-        <span class="v"><span>${esc(CONFIG.payTo.mtn)}</span>
-          <button class="copy" data-copy="${esc(CONFIG.payTo.mtn)}">COPY</button></span>
-      </div>
-      <div class="pay-row">
-        <span class="k">Airtel Money</span>
-        <span class="v"><span>${esc(CONFIG.payTo.airtel)}</span>
-          <button class="copy" data-copy="${esc(CONFIG.payTo.airtel)}">COPY</button></span>
-      </div>
-      <div class="pay-row">
-        <span class="k">Account name</span>
-        <span class="v"><span>${esc(CONFIG.payTo.name)}</span></span>
-      </div>
-      <div class="pay-row">
+      ${methodsHTML}
+      <div class="pay-row" style="margin-top:8px;">
         <span class="k">Reference</span>
         <span class="v"><span>${state.ref}</span>
           <button class="copy" data-copy="${state.ref}">COPY</button></span>
@@ -1158,4 +1261,4 @@ $("#resetBtn").addEventListener("click", () => {
 startConversation();
 </script>
 </body>
-  </html>
+</html>
